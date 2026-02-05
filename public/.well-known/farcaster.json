@@ -12,6 +12,14 @@
     "imageUrl": "https://bassy-gm.vercel.app/og-image.png.jpeg",
     "buttonTitle": "Open Bassy GM",
     "splashImageUrl": "https://bassy-gm.vercel.app/og-image.png.jpeg",
-    "splashBackgroundColor": "#0052FF"
+    "splashBackgroundColor": "#0052FF",
+    "primaryCategory": "social",
+    "tags": [
+      "social",
+      "base",
+      "gm",
+      "bassy",
+      "onchain"
+    ]
   }
 }
