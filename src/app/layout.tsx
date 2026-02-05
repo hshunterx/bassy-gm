@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Metadata Frame v2 berdasarkan dokumentasi Base.org
+  // Metadata untuk Farcaster Mini App (Frame v2)
   const frameMetadata = {
     version: "next",
     imageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
@@ -40,10 +40,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Pastikan menggunakan name="fc:frame" dengan stringify JSON */}
+        {/* Kode Meta untuk Verifikasi Base App (Wajib untuk gambar IMG_4185.jpg) */}
+        <meta name="base:app_id" content="6984afdb4609f1d788ad2be1" />
+        
+        {/* Kode Meta untuk Farcaster Mini App */}
         <meta name="fc:frame" content={JSON.stringify(frameMetadata)} />
         <meta property="og:image" content="https://bassy-gm.vercel.app/og-image.png.jpeg" />
-        <meta property="og:title" content="Bassy GM" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>
