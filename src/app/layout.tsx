@@ -15,7 +15,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Bassy GM - Onchain App",
-  description: "Built with OnchainKit",
+  description: "Say GM on Base via Farcaster",
+  openGraph: {
+    title: "Bassy GM",
+    description: "Say GM on Base via Farcaster",
+    images: ["https://bassy-gm.vercel.app/og-image.png.jpeg"],
+  },
+  other: {
+    "fc:frame": "vNext",
+    "fc:frame:image": "https://bassy-gm.vercel.app/og-image.png.jpeg",
+    "fc:frame:button:1": "SEND GM",
+    "fc:frame:button:1:action": "post",
+    "fc:frame:post_url": "https://bassy-gm.vercel.app/api/gm",
+  },
 };
 
 export default function RootLayout({
