@@ -24,9 +24,9 @@ export const metadata: Metadata = {
   other: {
     "fc:frame": "vNext",
     "fc:frame:image": "https://bassy-gm.vercel.app/og-image.png.jpeg",
-    "fc:frame:button:1": "SEND GM",
-    "fc:frame:button:1:action": "post",
-    "fc:frame:post_url": "https://bassy-gm.vercel.app/api/gm",
+    "fc:frame:button:1": "SEND GM Bassy",
+    "fc:frame:button:1:action": "launch_app",
+    "fc:frame:button:1:target": "https://bassy-gm.vercel.app",
   },
 };
 
