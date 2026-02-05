@@ -26,17 +26,22 @@ export default function Home() {
 
   useEffect(() => {
     const load = async () => {
-      // Mengambil data pengguna dari Farcaster (Fitur Koneksi Asli)
-      const context = await sdk.context;
-      if (context?.user?.displayName) {
-        setUserName(context.user.displayName);
+      try {
+        // Mengambil data konteks Farcaster
+        const context = await sdk.context;
+        if (context?.user?.displayName) {
+          setUserName(context.user.displayName);
+        }
+        
+        // Memberitahu Warpcast bahwa aplikasi sudah siap
+        // Ini akan membuat status "Ready call" jadi HIJAU
+        sdk.actions.ready();
+      } catch (error) {
+        console.error("Farcaster SDK load failed:", error);
       }
-      
-      // Memberitahu Warpcast bahwa aplikasi sudah siap (Ready Call)
-      sdk.actions.ready();
     };
 
-    if (sdk && !isSDKLoaded) {
+    if (!isSDKLoaded) {
       setIsSDKLoaded(true);
       load();
     }
@@ -52,9 +57,8 @@ export default function Home() {
       <header className="flex justify-between items-center p-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-10">
         <h1 className="text-xl font-black italic tracking-tighter text-blue-500">BASSY GM</h1>
         
-        {/* Tombol Connect Wallet OnchainKit */}
         <Wallet>
-          <ConnectWallet className="bg-blue-600 hover:bg-blue-700 transition-all rounded-full px-4 py-2 text-sm">
+          <ConnectWallet className="bg-blue-600 hover:bg-blue-700 transition-all rounded-full px-4 py-2 text-sm text-white border-none shadow-none">
             <Avatar className="h-5 w-5" />
             <Name />
           </ConnectWallet>
@@ -78,7 +82,6 @@ export default function Home() {
               <span className="text-5xl">🐟</span>
             </div>
             
-            {/* Menyapa pengguna secara otomatis jika lewat Farcaster */}
             <h2 className="text-3xl font-extrabold tracking-tight">
               GM, {userName || 'Anon'}! 🔵
             </h2>
@@ -89,11 +92,10 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-4 w-full">
-            {/* Komponen Transaksi Asli Base */}
             <Transaction
               chainId={8453}
               calls={[{
-                to: NFT_CONTRACT_ADDRESS,
+                to: NFT_CONTRACT_ADDRESS as `0x${string}`,
                 data: '0x1249c58b' as `0x${string}`, 
                 value: BigInt(0),
               }]}
@@ -101,7 +103,7 @@ export default function Home() {
             >
               <TransactionButton 
                 text="SEND GM ON-CHAIN"
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all active:scale-95 shadow-[0_0_20px_rgba(37,99,235,0.3)]" 
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all active:scale-95 shadow-[0_0_20px_rgba(37,99,235,0.3)] border-none" 
               />
             </Transaction>
           </div>
@@ -115,7 +117,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="p-6 text-center text-slate-600 text-[10px] uppercase tracking-widest font-bold">
         Built with 💙 on Base
       </footer>
