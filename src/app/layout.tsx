@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Metadata Frame v2 berdasarkan dokumentasi Base.org
   const frameMetadata = {
     version: "next",
     imageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
@@ -39,8 +40,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta property="fc:frame" content={JSON.stringify(frameMetadata)} />
+        {/* Pastikan menggunakan name="fc:frame" dengan stringify JSON */}
+        <meta name="fc:frame" content={JSON.stringify(frameMetadata)} />
         <meta property="og:image" content="https://bassy-gm.vercel.app/og-image.png.jpeg" />
+        <meta property="og:title" content="Bassy GM" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>
