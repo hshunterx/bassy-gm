@@ -22,11 +22,20 @@ export const metadata: Metadata = {
     images: ["https://bassy-gm.vercel.app/og-image.png.jpeg"],
   },
   other: {
-    "fc:frame": "vNext",
-    "fc:frame:image": "https://bassy-gm.vercel.app/og-image.png.jpeg",
-    "fc:frame:button:1": "SEND GM Bassy",
-    "fc:frame:button:1:action": "launch_app",
-    "fc:frame:button:1:target": "https://bassy-gm.vercel.app",
+    "fc:frame": JSON.stringify({
+      version: "next",
+      imageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
+      button: {
+        title: "SEND GM Bassy",
+        action: {
+          type: "launch_app",
+          name: "Bassy GM",
+          url: "https://bassy-gm.vercel.app",
+          splashImageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
+          splashBackgroundColor: "#0052FF",
+        },
+      },
+    }),
   },
 };
 
