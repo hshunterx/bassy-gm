@@ -14,36 +14,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bassy GM - Onchain App",
+  title: "Bassy GM",
   description: "Say GM on Base via Farcaster",
-  openGraph: {
-    title: "Bassy GM",
-    description: "Say GM on Base via Farcaster",
-    images: ["https://bassy-gm.vercel.app/og-image.png.jpeg"],
-  },
-  other: {
-    "fc:frame": JSON.stringify({
-      version: "next",
-      imageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
-      button: {
-        title: "SEND GM Bassy",
-        action: {
-          type: "launch_app",
-          name: "Bassy GM",
-          url: "https://bassy-gm.vercel.app",
-          splashImageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
-          splashBackgroundColor: "#0052FF",
-        },
-      },
-    }),
-  },
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const frameMetadata = {
+    version: "next",
+    imageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
+    button: {
+      title: "SEND GM Bassy",
+      action: {
+        type: "launch_app",
+        name: "Bassy GM",
+        url: "https://bassy-gm.vercel.app",
+        splashImageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
+        splashBackgroundColor: "#0052FF",
+      },
+    },
+  };
+
   return (
     <html lang="en">
+      <head>
+        <meta property="fc:frame" content={JSON.stringify(frameMetadata)} />
+        <meta property="og:image" content="https://bassy-gm.vercel.app/og-image.png.jpeg" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
