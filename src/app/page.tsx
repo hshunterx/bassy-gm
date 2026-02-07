@@ -65,7 +65,7 @@ export default function Home() {
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setTimeLeft(`${hours}j ${minutes}m ${seconds}d`);
+        setTimeLeft(`${hours}j ${minutes}m ${seconds}s`);
       } else {
         setCanCheckIn(true);
         setTimeLeft("");
@@ -76,11 +76,12 @@ export default function Home() {
   }, [lastCheckIn]);
 
   const handleStatus = (status: LifecycleStatus) => {
+    // Memastikan notifikasi muncul saat transaksi benar-benar berhasil
     if (status.statusName === 'success') {
       const now = Date.now();
       localStorage.setItem('last_gm_checkin', now.toString());
       setLastCheckIn(now);
-      alert("GM Berhasil! Kamu sudah check-in. Kembali lagi dalam 12 jam.");
+      alert("✅ GM Berhasil! Kamu sudah check-in. Sampai jumpa 12 jam lagi!");
     }
   };
 
@@ -105,8 +106,8 @@ export default function Home() {
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-start p-6 text-center">
         
-        {/* Tombol Navigasi Sesuai Garis Kuning */}
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-2 mb-8">
+        {/* Navigasi Link */}
+        <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-2 mb-8 px-2">
             <a href="https://wild-event-563.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
               Neynar & Spam
@@ -120,10 +121,10 @@ export default function Home() {
         <div className="max-w-md w-full bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl">
           <div className="space-y-4">
             <img src="/logo-baru.png" alt="Logo" className="w-24 h-24 mx-auto object-contain animate-[bounce_4s_infinite]" />
-            <h2 className="text-2xl font-black italic">GM, {userName || 'Anon'}! 🔵</h2>
+            <h2 className="text-2xl font-black italic tracking-tight">GM, {userName || 'Anon'}! 🔵</h2>
           </div>
 
-          <div className="w-full">
+          <div className="w-full min-h-[60px]"> {/* Menjaga tinggi area tombol agar tidak goyang */}
             {canCheckIn ? (
               <Transaction
                 chainId={8453}
@@ -136,19 +137,19 @@ export default function Home() {
               >
                 <TransactionButton 
                   text="SEND GM ON-CHAIN"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none" 
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none uppercase" 
                 />
               </Transaction>
             ) : (
-              <div className="w-full bg-slate-800/50 text-slate-400 py-4 rounded-2xl font-black border border-white/5 cursor-not-allowed">
-                CHECKED IN: {timeLeft}
+              <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 cursor-not-allowed uppercase tracking-wider">
+                WAIT: {timeLeft}
               </div>
             )}
           </div>
 
           <div className="flex items-center justify-center gap-2 pt-2">
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${canCheckIn ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+              <span className={`w-1.5 h-1.5 rounded-full animate-pulse shadow-sm ${canCheckIn ? 'bg-green-500 shadow-green-500' : 'bg-yellow-500 shadow-yellow-500'}`}></span>
               {canCheckIn ? 'Status: Ready to GM' : 'Status: Waiting Period'}
             </div>
           </div>
