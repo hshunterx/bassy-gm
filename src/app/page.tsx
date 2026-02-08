@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-// UPDATE: Menggunakan SDK baru sesuai instruksi Tim Base
+// SDK terbaru sesuai standar Farcaster Mini App
 import { sdk } from '@farcaster/miniapp-sdk'; 
 import { 
   ConnectWallet, 
@@ -31,12 +31,10 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        // UPDATE: SDK baru menggunakan pola ini
         const context = await sdk.context;
         if (context?.user?.displayName) {
           setUserName(context.user.displayName);
         }
-        // Memberitahu Farcaster aplikasi siap
         sdk.actions.ready();
       } catch (error) {
         console.error("Farcaster Mini-app SDK load failed:", error);
@@ -107,7 +105,7 @@ export default function Home() {
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-start p-6 text-center">
         
-        {/* Tombol Navigasi Menu */}
+        {/* Tombol Navigasi Menu Atas */}
         <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-2 mb-8 px-2">
             <a href="https://wild-event-563.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
@@ -125,27 +123,40 @@ export default function Home() {
             <h2 className="text-2xl font-black italic tracking-tight uppercase">GM, {userName || 'Anon'}! 🔵</h2>
           </div>
 
-          <div className="w-full min-h-[60px]">
-            {canCheckIn ? (
-              <Transaction
-                chainId={8453}
-                calls={[{
-                  to: NFT_CONTRACT_ADDRESS as `0x${string}`,
-                  data: '0x1249c58b' as `0x${string}`, 
-                  value: BigInt(0),
-                }]}
-                onStatus={handleStatus}
-              >
-                <TransactionButton 
-                  text="SEND GM ON-CHAIN"
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none uppercase" 
-                />
-              </Transaction>
-            ) : (
-              <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 cursor-not-allowed uppercase tracking-wider">
-                WAIT: {timeLeft}
-              </div>
-            )}
+          <div className="w-full space-y-4">
+            {/* Tombol Utama GM */}
+            <div className="min-h-[60px]">
+              {canCheckIn ? (
+                <Transaction
+                  chainId={8453}
+                  calls={[{
+                    to: NFT_CONTRACT_ADDRESS as `0x${string}`,
+                    data: '0x1249c58b' as `0x${string}`, 
+                    value: BigInt(0),
+                  }]}
+                  onStatus={handleStatus}
+                >
+                  <TransactionButton 
+                    text="SEND GM ON-CHAIN"
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none uppercase" 
+                  />
+                </Transaction>
+              ) : (
+                <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 cursor-not-allowed uppercase tracking-wider">
+                  WAIT: {timeLeft}
+                </div>
+              )}
+            </div>
+
+            {/* Tombol MINT NFT FREE */}
+            <a 
+              href="https://vibrant-bassy.nfts2.me" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase active:scale-95"
+            >
+              Mint NFT FREE 🚀
+            </a>
           </div>
 
           <div className="flex items-center justify-center gap-2 pt-2">
