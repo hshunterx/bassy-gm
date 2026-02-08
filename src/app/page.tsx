@@ -15,16 +15,19 @@ import type { LifecycleStatus } from '@coinbase/onchainkit/transaction';
 
 export default function Home() {
   const [userPfp, setUserPfp] = useState<string>("/logo-baru.png"); 
+  const [userName, setUserName] = useState<string>("Hunter");
   const [streak, setStreak] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [loadingMsg, setLoadingMsg] = useState(""); // State baru untuk feedback
+  const [loadingMsg, setLoadingMsg] = useState("");
 
   useEffect(() => {
     const init = async () => {
       try {
         const context = await sdk.context;
-        if (context?.user?.pfpUrl) setUserPfp(context.user.pfpUrl);
-        // Memastikan SDK siap
+        if (context?.user) {
+          if (context.user.pfpUrl) setUserPfp(context.user.pfpUrl);
+          if (context.user.displayName) setUserName(context.user.displayName);
+        }
         sdk.actions.ready();
       } catch (e) {
         console.error("SDK Init Error", e);
@@ -36,10 +39,9 @@ export default function Home() {
   }, []);
 
   const handleStatus = (status: LifecycleStatus) => {
-    console.log("Current Status:", status.statusName);
-    
-    // Memberikan feedback saat tombol diklik
-    if (status.statusName === 'initiate') {
+    // FIX: Menggunakan 'init' sesuai standar library OnchainKit
+    if (status.statusName === 'init') {
+      setIsSuccess(false);
       setLoadingMsg("⌛ Membuka Dompet...");
     }
     
@@ -48,14 +50,13 @@ export default function Home() {
     }
 
     if (status.statusName === 'success') {
-      setLoadingMsg(""); // Hapus pesan loading
+      setLoadingMsg(""); 
       const newStreak = streak + 1;
       setStreak(newStreak);
       localStorage.setItem('gm_streak', newStreak.toString());
-      
       setIsSuccess(true);
-      // Popup bawaan browser sebagai fallback terakhir
-      alert(`✅ GM BERHASIL!\nStreak Anda: ${newStreak} Hari`);
+      // Popup alert sebagai kepastian
+      alert(`✅ GM BERHASIL!\nStreak: ${newStreak} Hari`);
     }
 
     if (status.statusName === 'error') {
@@ -67,7 +68,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white p-6 items-center font-sans">
       
-      {/* Notifikasi Loading / Sukses */}
+      {/* Notifikasi Top Bar */}
       {(loadingMsg || isSuccess) && (
         <div className={`fixed top-4 left-4 right-4 z-[100] p-4 rounded-xl text-center font-black shadow-2xl transition-all ${isSuccess ? 'bg-green-600' : 'bg-blue-600 animate-pulse'}`}>
           {isSuccess ? `🔥 GM BERHASIL! STREAK: ${streak}` : loadingMsg}
@@ -75,7 +76,7 @@ export default function Home() {
       )}
 
       <header className="w-full flex justify-between items-center mb-8 sticky top-0 bg-black/50 backdrop-blur-md py-2 z-10">
-        <h1 className="text-xl font-black italic text-blue-500 uppercase tracking-tighter">Bassy GM</h1>
+        <h1 className="text-xl font-black italic text-blue-500 uppercase">Bassy GM</h1>
         <Wallet>
           <ConnectWallet className="bg-blue-600 rounded-full px-4 py-1 text-xs border-none active:scale-90 transition-transform">
             <Avatar className="h-4 w-4" />
@@ -84,14 +85,14 @@ export default function Home() {
         </Wallet>
       </header>
 
-      <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-sm text-center shadow-2xl backdrop-blur-sm">
+      <div className="bg-white/5 border border-white/10 p-8 rounded-[2.5rem] w-full max-w-sm text-center shadow-2xl backdrop-blur-sm mt-10">
         <div className="relative w-20 h-20 mx-auto mb-4">
-          <img src={userPfp} className="w-20 h-20 rounded-full border-2 border-blue-500 object-cover shadow-[0_0_15px_rgba(59,130,246,0.5)]" alt="pfp" />
+          <img src={userPfp} className="w-20 h-20 rounded-full border-2 border-blue-500 object-cover" alt="pfp" />
           <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-600 rounded-full border-2 border-black"></div>
         </div>
         
-        <h2 className="text-2xl font-black italic uppercase">GM, Hunter!</h2>
-        <p className="text-blue-400 font-black mb-6 tracking-widest text-xs uppercase">HARI KE-{streak}</p>
+        <h2 className="text-2xl font-black italic uppercase">GM, {userName}!</h2>
+        <p className="text-blue-400 font-black mb-6 tracking-widest text-xs uppercase italic">Streak: {streak} Hari</p>
 
         <Transaction 
           chainId={8453} 
@@ -103,7 +104,6 @@ export default function Home() {
             } 
           }}
         >
-          {/* Tombol tanpa properti kustom yang aneh agar stabil */}
           <TransactionButton 
             text="SEND GM (FREE)" 
             className="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black shadow-lg transition-all active:scale-95" 
@@ -114,15 +114,6 @@ export default function Home() {
           </TransactionStatus>
         </Transaction>
       </div>
-
-      {isSuccess && (
-        <button 
-          onClick={() => setIsSuccess(false)} 
-          className="mt-6 text-[10px] text-slate-500 underline uppercase font-bold tracking-widest"
-        >
-          Tutup Notifikasi
-        </button>
-      )}
 
       <footer className="mt-auto py-4 text-[8px] text-zinc-800 font-black uppercase tracking-[0.3em]">
         Bassy Ecosystem • 2026
