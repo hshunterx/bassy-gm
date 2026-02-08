@@ -7,7 +7,7 @@ import { Avatar, Name } from '@coinbase/onchainkit/identity';
 import { 
   Transaction, 
   TransactionButton,
-  TransactionSponsoringBadge 
+  TransactionSponsor 
 } from '@coinbase/onchainkit/transaction';
 import type { LifecycleStatus } from '@coinbase/onchainkit/transaction';
 
@@ -129,7 +129,7 @@ export default function Home() {
                   capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
                 >
                   <TransactionButton text="SEND GM ON-CHAIN (FREE)" className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none" />
-                  <TransactionSponsoringBadge className="mt-2 text-[10px] text-blue-400" />
+                  <TransactionSponsor className="mt-2 text-[10px] text-blue-400 font-bold uppercase" />
                 </Transaction>
               ) : (
                 <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 uppercase">WAIT: {timeLeft}</div>
