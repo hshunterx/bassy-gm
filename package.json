@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@coinbase/onchainkit": "^0.36.1",
+    "@coinbase/onchainkit": "latest",
     "@farcaster/miniapp-sdk": "latest",
     "@tanstack/react-query": "^5.62.0",
     "next": "15.1.9",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "viem": "2.21.45",
-    "wagmi": "2.13.1",
+    "viem": "latest",
+    "wagmi": "latest",
     "lucide-react": "^0.447.0",
     "pino-pretty": "^11.0.0",
     "tailwindcss": "^3.4.1",
