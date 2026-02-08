@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@coinbase/onchainkit": "0.33.0",
+    "@coinbase/onchainkit": "^0.36.1",
     "@farcaster/miniapp-sdk": "latest",
-    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query": "^5.62.0",
     "next": "15.1.9",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "viem": "^2.21.0",
-    "wagmi": "^2.13.0",
+    "viem": "2.21.45",
+    "wagmi": "2.13.1",
     "lucide-react": "^0.447.0",
     "pino-pretty": "^11.0.0",
     "tailwindcss": "^3.4.1",
@@ -31,10 +31,6 @@
   },
   "overrides": {
     "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "@coinbase/onchainkit": {
-      "react": "19.0.0",
-      "react-dom": "19.0.0"
-    }
+    "react-dom": "19.0.0"
   }
 }
