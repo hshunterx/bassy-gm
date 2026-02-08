@@ -15,77 +15,84 @@ import {
 import type { LifecycleStatus } from '@coinbase/onchainkit/transaction';
 
 export default function Home() {
-  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [userPfp, setUserPfp] = useState<string>("/logo-baru.png"); 
   const [streak, setStreak] = useState(0);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [lastCheckIn, setLastCheckIn] = useState(0);
 
-  // Inisialisasi Data
   useEffect(() => {
+    const loadContext = async () => {
+      const context = await sdk.context;
+      if (context?.user) {
+        setUserName(context.user.displayName || context.user.username || "Hunter");
+        // PERBAIKAN PFP: Langsung ambil dari context jika tersedia
+        if (context.user.pfpUrl) {
+          setUserPfp(context.user.pfpUrl);
+        } else if (context.user.fid) {
+           // Fallback ke Neynar jika context kosong
+           fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${context.user.fid}`, {
+             headers: { 'api_key': 'AC79604A-1C42-401D-AEEB-603CEE7C57B2' }
+           })
+           .then(res => res.json())
+           .then(data => {
+             if (data?.users?.[0]?.pfp_url) setUserPfp(data.users[0].pfp_url);
+           });
+        }
+      }
+      sdk.actions.ready();
+    };
+    loadContext();
+
     const savedStreak = localStorage.getItem('gm_streak');
-    const savedTime = localStorage.getItem('last_gm_checkin');
     if (savedStreak) setStreak(parseInt(savedStreak));
-    if (savedTime) setLastCheckIn(parseInt(savedTime));
-    
-    sdk.actions.ready();
   }, []);
 
   const handleStatus = (status: LifecycleStatus) => {
-    console.log("Status:", status.statusName);
-    
-    // Munculkan popup segera setelah transaksi dikonfirmasi di blockchain
     if (status.statusName === 'success') {
-      const now = Date.now();
       const newStreak = streak + 1;
-      
       setStreak(newStreak);
-      setLastCheckIn(now);
       localStorage.setItem('gm_streak', newStreak.toString());
-      localStorage.setItem('last_gm_checkin', now.toString());
+      localStorage.setItem('last_gm_checkin', Date.now().toString());
       
       setShowSuccessPopup(true);
-      // Sembunyikan popup setelah 4 detik
-      setTimeout(() => setShowSuccessPopup(false), 4000);
+      setTimeout(() => setShowSuccessPopup(false), 5000);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white relative overflow-hidden">
-      {/* SUCCESS POPUP - Dipaksa muncul di paling depan */}
+    <div className="flex flex-col min-h-screen bg-black text-white relative">
+      {/* POPUP: Z-Index super tinggi agar tidak tertutup */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm px-6">
-          <div className="bg-blue-600 border-2 border-blue-400 p-8 rounded-[2rem] text-center shadow-[0_0_50px_rgba(37,99,235,0.8)] scale-110 transition-all">
-            <span className="text-5xl mb-2 block">🔥</span>
-            <h2 className="text-3xl font-black italic uppercase tracking-tighter">GM BERHASIL!</h2>
-            <p className="mt-2 text-blue-100 font-bold uppercase tracking-widest">Day {streak} Streak</p>
-            <div className="mt-4 text-[10px] bg-white/20 py-1 px-3 rounded-full uppercase">Transaksi Selesai</div>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 px-6">
+          <div className="bg-blue-600 p-10 rounded-[3rem] text-center border-2 border-blue-400 shadow-2xl scale-110">
+            <span className="text-6xl mb-4 block">🔥</span>
+            <h2 className="text-3xl font-black uppercase italic">GM SUCCESS!</h2>
+            <p className="text-xl font-bold mt-2">STREAK: {streak} HARI</p>
           </div>
         </div>
       )}
 
-      {/* Konten Utama */}
-      <header className="p-4 flex justify-between items-center border-b border-white/10 bg-black/50 backdrop-blur-md sticky top-0 z-50">
-        <h1 className="text-xl font-black italic text-blue-500 uppercase">Bassy GM</h1>
+      <header className="p-4 flex justify-between items-center border-b border-white/10 sticky top-0 bg-black/80 z-50">
+        <h1 className="text-xl font-black italic text-blue-500">BASSY GM</h1>
         <Wallet>
-          <ConnectWallet className="bg-blue-600 rounded-full text-xs font-bold px-4 py-2 border-none">
+          <ConnectWallet className="bg-blue-600 rounded-full text-xs font-bold px-4 py-2">
             <Avatar className="h-4 w-4" />
             <Name />
           </ConnectWallet>
         </Wallet>
       </header>
 
-      <main className="flex-grow flex flex-col items-center p-6 mt-4">
-        <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-[3rem] p-8 text-center backdrop-blur-3xl shadow-2xl">
-          <div className="relative w-24 h-24 mx-auto mb-4">
-             <div className="w-24 h-24 rounded-full border-2 border-blue-500 overflow-hidden shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-               <img src="/logo-baru.png" className="w-full h-full object-cover" alt="pfp" />
-             </div>
-             <div className="absolute bottom-0 right-0 w-6 h-6 bg-blue-600 rounded-full border-2 border-black"></div>
+      <main className="flex-grow flex flex-col items-center p-6 text-center">
+        <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-[3rem] p-10 shadow-2xl backdrop-blur-md">
+          <div className="relative w-28 h-28 mx-auto mb-6">
+             <img src={userPfp} className="w-28 h-28 rounded-full border-4 border-blue-600 shadow-lg object-cover" alt="pfp" />
+             <div className="absolute bottom-1 right-1 w-7 h-7 bg-blue-600 rounded-full border-2 border-black"></div>
           </div>
 
-          <h2 className="text-2xl font-black italic uppercase mb-2">GM, Hunter!</h2>
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-full px-4 py-1 inline-block mb-8">
-            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">🔥 {streak} HARI CHECK-IN</span>
+          <h2 className="text-3xl font-black italic uppercase mb-2">GM, {userName}!</h2>
+          <div className="bg-blue-600/20 border border-blue-600/40 rounded-full px-6 py-2 inline-block mb-10">
+            <span className="text-xs font-black text-blue-400 uppercase tracking-widest">🔥 {streak} HARI CHECK-IN</span>
           </div>
 
           <Transaction 
@@ -94,15 +101,13 @@ export default function Home() {
             onStatus={handleStatus}
             capabilities={{ paymasterService: { url: 'https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f' } }}
           >
-            <TransactionButton text="SEND GM ON-CHAIN (FREE)" className="w-full bg-blue-600 font-black py-4 rounded-2xl shadow-lg uppercase active:scale-95 transition-transform" />
-            <TransactionSponsor className="mt-2 text-[10px] text-blue-400 font-bold uppercase" />
-            <TransactionStatus className="mt-2 text-xs">
-              <TransactionStatusLabel className="text-slate-500 font-bold uppercase" />
-              <TransactionStatusAction className="text-blue-500 underline ml-1" />
+            <TransactionButton text="SEND GM ON-CHAIN (FREE)" className="w-full bg-blue-600 font-black py-5 rounded-[2rem] text-lg shadow-xl hover:scale-105 transition-transform" />
+            <TransactionSponsor className="mt-4 text-[10px] text-blue-500 font-bold uppercase" />
+            <TransactionStatus>
+              <TransactionStatusLabel className="text-slate-500" />
+              <TransactionStatusAction className="text-blue-500 underline ml-2" />
             </TransactionStatus>
           </Transaction>
-          
-          <a href="https://vibrant-bassy.nfts2.me" target="_blank" className="mt-4 block w-full bg-gradient-to-r from-purple-600 to-pink-600 font-black py-4 rounded-2xl uppercase shadow-lg active:scale-95 transition-transform">Mint NFT FREE 🚀</a>
         </div>
       </main>
     </div>
