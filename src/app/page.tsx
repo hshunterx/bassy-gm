@@ -9,7 +9,8 @@ import {
   TransactionButton,
   TransactionSponsor,
   TransactionStatus,
-  TransactionStatusLabel
+  TransactionStatusLabel,
+  TransactionStatusAction
 } from '@coinbase/onchainkit/transaction';
 import type { LifecycleStatus } from '@coinbase/onchainkit/transaction';
 
@@ -84,26 +85,30 @@ export default function Home() {
   const handleStatus = (status: LifecycleStatus) => {
     if (status.statusName === 'success') {
       const now = Date.now();
-      const newStreak = (streak || 0) + 1;
+      const currentStreak = parseInt(localStorage.getItem('gm_streak') || '0');
+      const newStreak = currentStreak + 1;
+      
       setStreak(newStreak);
       setLastCheckIn(now);
       localStorage.setItem('last_gm_checkin', now.toString());
       localStorage.setItem('gm_streak', newStreak.toString());
+      
       setShowSuccessPopup(true);
-      setTimeout(() => setShowSuccessPopup(false), 2000);
+      setTimeout(() => setShowSuccessPopup(false), 3000);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white font-sans overflow-x-hidden relative">
+    <div className="flex flex-col min-h-screen bg-black text-white font-sans overflow-x-hidden relative text-center">
+      {/* SUCCESS POPUP */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 pointer-events-none transition-all">
-          <div className="bg-blue-600 text-white font-black py-5 px-10 rounded-3xl shadow-[0_0_50px_rgba(37,99,235,0.6)] flex flex-col items-center gap-1 border border-blue-400 animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-blue-600 text-white font-black py-8 px-10 rounded-[2.5rem] shadow-[0_0_50px_rgba(37,99,235,0.5)] flex flex-col items-center gap-2 border border-blue-400 animate-zoom-in">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">🔥</span>
-              <span className="text-xl uppercase italic tracking-widest">GM BERHASIL!</span>
+              <span className="text-4xl">🔥</span>
+              <span className="text-2xl uppercase italic tracking-widest">GM BERHASIL!</span>
             </div>
-            <p className="text-[10px] opacity-80 uppercase tracking-tighter">Day {streak}</p>
+            <p className="text-sm opacity-90 uppercase tracking-[0.2em] font-bold">Streak: {streak} Hari</p>
           </div>
         </div>
       )}
@@ -113,19 +118,19 @@ export default function Home() {
       </div>
 
       <header className="flex justify-between items-center p-4 bg-black/40 backdrop-blur-xl border-b border-white/10 sticky top-0 z-20">
-        <h1 className="text-xl font-black italic tracking-tighter text-blue-500">BASSY GM</h1>
+        <h1 className="text-xl font-black italic tracking-tighter text-blue-500 uppercase">Bassy GM</h1>
         <Wallet>
-          <ConnectWallet className="bg-blue-600 rounded-full px-4 py-2 text-sm text-white border-none transition-all active:scale-95">
+          <ConnectWallet className="bg-blue-600 rounded-full px-4 py-2 text-sm text-white border-none transition-transform active:scale-90">
             <Avatar className="h-4 w-4" />
             <Name />
           </ConnectWallet>
         </Wallet>
       </header>
 
-      <main className="relative z-10 flex-grow flex flex-col items-center justify-start p-6 text-center">
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-2 mb-8 px-2">
-          <a href="https://wild-event-563.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase text-slate-400">Neynar & Spam</a>
-          <a href="https://success-settlers-744.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase text-slate-400">Bassy Chart</a>
+      <main className="relative z-10 flex-grow flex flex-col items-center justify-start p-6">
+        <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-2 mb-8 px-2 text-slate-500">
+          <a href="https://wild-event-563.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase hover:bg-white/10 transition-colors">Neynar & Spam</a>
+          <a href="https://success-settlers-744.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase hover:bg-white/10 transition-colors">Bassy Chart</a>
         </div>
 
         <div className="max-w-md w-full bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl">
@@ -152,19 +157,20 @@ export default function Home() {
                   onStatus={handleStatus}
                   capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
                 >
-                  <TransactionButton text="SEND GM ON-CHAIN (FREE)" className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none uppercase transition-all active:scale-95" />
+                  <TransactionButton text="SEND GM ON-CHAIN (FREE)" className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none uppercase transition-transform active:scale-95" />
                   <TransactionSponsor className="mt-2 text-[10px] text-blue-400 font-bold uppercase" />
                   <TransactionStatus className="mt-2">
                     <TransactionStatusLabel className="text-[10px] text-slate-500 font-bold uppercase" />
+                    <TransactionStatusAction className="text-[10px] text-blue-500 underline ml-1" />
                   </TransactionStatus>
                 </Transaction>
               ) : (
-                <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 uppercase tracking-widest">
+                <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 uppercase tracking-widest animate-pulse">
                   TUNGGU: {timeLeft}
                 </div>
               )}
             </div>
-            <a href="https://vibrant-bassy.nfts2.me" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase transition-all active:scale-95">Mint NFT FREE 🚀</a>
+            <a href="https://vibrant-bassy.nfts2.me" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black py-4 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase transition-transform active:scale-95">Mint NFT FREE 🚀</a>
           </div>
         </div>
       </main>
