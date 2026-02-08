@@ -9,12 +9,7 @@ import { useState, type ReactNode } from 'react';
 
 const config = createConfig({
   chains: [base],
-  connectors: [
-    coinbaseWallet({ 
-      appName: 'Bassy GM',
-      preference: 'all' 
-    })
-  ],
+  connectors: [coinbaseWallet({ appName: 'Bassy GM', preference: 'all' })],
   ssr: true,
   transports: { [base.id]: http() },
 });
