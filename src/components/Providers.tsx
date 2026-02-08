@@ -23,9 +23,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <OnchainKitProvider 
           apiKey="AC79604A-1C42-401D-AEEB-603CEE7C57B2" 
           chain={base}
-          config={{
-            paymaster: "https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f"
-          }}
+          // JANGAN gunakan properti 'config' di sini karena tidak didukung
         >
           {children}
         </OnchainKitProvider>
