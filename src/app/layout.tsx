@@ -1,57 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Providers } from "../components/Providers";
+import type { Metadata } from 'next';
+import './globals.css';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Metadata terbaru sesuai instruksi Tim Base
 export const metadata: Metadata = {
-  title: "Bassy GM",
-  description: "Send GM On BASE", // Deskripsi yang kamu inginkan muncul di Warpcast
+  metadataBase: new URL('https://bassy-gm.vercel.app/'), // Ganti dengan URL deployment Anda
+  title: 'Bassy GM',
+  description: 'GM On-Chain with Bassy, powered by Base.',
   openGraph: {
-    title: "Bassy GM",
-    description: "Send GM On BASE",
-    images: ["https://bassy-gm.vercel.app/logo-baru.png"], // Gunakan logo utama kamu
+    title: 'Bassy GM',
+    description: 'GM On-Chain with Bassy, powered by Base.',
+    images: ['/og-logobaru.jpeg'], // Menggunakan logo baru
   },
   other: {
-    // Verifikasi ID Aplikasi Base
-    "base:app_id": "6984afdb4609f1d788ad2be1",
-    
-    // Konfigurasi Frame sesuai saran Tim Base
-    "fc:frame": JSON.stringify({
-      version: "next",
-      imageUrl: "https://bassy-gm.vercel.app/logo-baru.png",
-      button: {
-        title: "Launch BASSY GM",
-        action: {
-          type: "launch_frame", // PERBAIKAN: Wajib 'launch_frame' sesuai instruksi Tim Base
-          name: "Bassy GM",
-          url: "https://bassy-gm.vercel.app",
-          splashImageUrl: "https://bassy-gm.vercel.app/logo-baru.png",
-          splashBackgroundColor: "#000000",
-        },
-      },
-    }),
+    'fc:frame': 'vNext',
+    'fc:frame:image': 'https://bassy-gm.vercel.app/og-logobaru.jpeg', // Ganti dengan URL deployment Anda
+    'fc:frame:button:1': 'SEND GM BASE',
+    'fc:frame:button:1:action': 'tx',
+    'fc:frame:button:1:target': 'https://bassy-gm.vercel.app/api/tx', // Endpoint API untuk transaksi
+    'fc:frame:button:1:post_url': 'https://bassy-gm.vercel.app/api/tx', // Endpoint API untuk post transaksi
   },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
