@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-// SDK terbaru sesuai standar Farcaster Mini App
 import { sdk } from '@farcaster/miniapp-sdk'; 
 import { 
   ConnectWallet, 
@@ -20,10 +19,13 @@ import { Transaction, TransactionButton } from '@coinbase/onchainkit/transaction
 import type { LifecycleStatus } from '@coinbase/onchainkit/transaction';
 
 const NFT_CONTRACT_ADDRESS = '0x1D6837873D70E989E733e83F676B66b96fB690A8';
+// API Key Neynar kamu sudah terpasang
+const NEYNAR_API_KEY = 'AC79604A-1C42-401D-AEEB-603CEE7C57B2'; 
 
 export default function Home() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [userName, setUserName] = useState<string | undefined>(undefined);
+  const [userPfp, setUserPfp] = useState<string>("/logo-baru.png"); // Default jika PFP gagal dimuat
   const [lastCheckIn, setLastCheckIn] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [canCheckIn, setCanCheckIn] = useState<boolean>(true);
@@ -32,8 +34,22 @@ export default function Home() {
     const load = async () => {
       try {
         const context = await sdk.context;
-        if (context?.user?.displayName) {
+        if (context?.user) {
           setUserName(context.user.displayName);
+          
+          // MENGAMBIL DATA PROFIL DARI NEYNAR BERDASARKAN FID
+          if (context.user.fid) {
+            fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${context.user.fid}`, {
+              headers: { 'api_key': NEYNAR_API_KEY }
+            })
+            .then(res => res.json())
+            .then(data => {
+              if (data.users && data.users[0]) {
+                setUserPfp(data.users[0].pfp_url);
+              }
+            })
+            .catch(err => console.error("Neynar Fetch Error:", err));
+          }
         }
         sdk.actions.ready();
       } catch (error) {
@@ -119,58 +135,9 @@ export default function Home() {
 
         <div className="max-w-md w-full bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl transition-all">
           <div className="space-y-4">
-            <img src="/logo-baru.png" alt="Logo" className="w-24 h-24 mx-auto object-contain animate-[bounce_4s_infinite]" />
-            <h2 className="text-2xl font-black italic tracking-tight uppercase">GM, {userName || 'Anon'}! 🔵</h2>
-          </div>
-
-          <div className="w-full space-y-4">
-            {/* Tombol Utama GM */}
-            <div className="min-h-[60px]">
-              {canCheckIn ? (
-                <Transaction
-                  chainId={8453}
-                  calls={[{
-                    to: NFT_CONTRACT_ADDRESS as `0x${string}`,
-                    data: '0x1249c58b' as `0x${string}`, 
-                    value: BigInt(0),
-                  }]}
-                  onStatus={handleStatus}
-                >
-                  <TransactionButton 
-                    text="SEND GM ON-CHAIN"
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-none uppercase" 
-                  />
-                </Transaction>
-              ) : (
-                <div className="w-full bg-slate-800/40 text-slate-400 py-4 rounded-2xl font-black border border-white/5 cursor-not-allowed uppercase tracking-wider">
-                  WAIT: {timeLeft}
-                </div>
-              )}
-            </div>
-
-            {/* Tombol MINT NFT FREE */}
-            <a 
-              href="https://vibrant-bassy.nfts2.me" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-4 rounded-2xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase active:scale-95"
-            >
-              Mint NFT FREE 🚀
-            </a>
-          </div>
-
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full animate-pulse shadow-sm ${canCheckIn ? 'bg-green-500 shadow-green-500' : 'bg-yellow-500 shadow-yellow-500'}`}></span>
-              {canCheckIn ? 'Status: Ready' : 'Status: Waiting Period'}
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <footer className="p-6 text-center text-slate-700 text-[10px] font-bold uppercase tracking-widest">
-        Bassy Ecosystem • 2026
-      </footer>
-    </div>
-  );
-}
+            {/* TAMPILAN FOTO PROFIL DARI NEYNAR */}
+            <div className="relative mx-auto w-24 h-24">
+              <img 
+                src={userPfp} 
+                alt="User PFP" 
+                className="w-24 h-24 mx-auto rounded-full object-cover border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,
