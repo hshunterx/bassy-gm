@@ -13,30 +13,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Metadata terbaru sesuai standar Base Mini App & Farcaster v2
+// Metadata terbaru sesuai instruksi Tim Base
 export const metadata: Metadata = {
   title: "Bassy GM",
-  description: "Say GM on Base via Farcaster",
+  description: "Send GM On BASE", // Deskripsi yang kamu inginkan muncul di Warpcast
   openGraph: {
     title: "Bassy GM",
-    description: "Say GM on Base via Farcaster",
-    images: ["https://bassy-gm.vercel.app/og-image.png.jpeg"],
+    description: "Send GM On BASE",
+    images: ["https://bassy-gm.vercel.app/logo-baru.png"], // Gunakan logo utama kamu
   },
   other: {
-    // Verifikasi ID Aplikasi Base kamu
+    // Verifikasi ID Aplikasi Base
     "base:app_id": "6984afdb4609f1d788ad2be1",
-    // Format Manifest Mini App terbaru (menggantikan fc:frame lama)
+    
+    // Konfigurasi Frame sesuai saran Tim Base
     "fc:frame": JSON.stringify({
       version: "next",
-      imageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
+      imageUrl: "https://bassy-gm.vercel.app/logo-baru.png",
       button: {
-        title: "SEND GM Bassy",
+        title: "Launch BASSY GM",
         action: {
-          type: "launch_app", // Gunakan launch_app sesuai dokumentasi terbaru
+          type: "launch_frame", // PERBAIKAN: Wajib 'launch_frame' sesuai instruksi Tim Base
           name: "Bassy GM",
           url: "https://bassy-gm.vercel.app",
-          splashImageUrl: "https://bassy-gm.vercel.app/og-image.png.jpeg",
-          splashBackgroundColor: "#0052FF",
+          splashImageUrl: "https://bassy-gm.vercel.app/logo-baru.png",
+          splashBackgroundColor: "#000000",
         },
       },
     }),
