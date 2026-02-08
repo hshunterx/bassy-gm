@@ -23,7 +23,6 @@ export function Providers({ children }: { children: ReactNode }) {
         <OnchainKitProvider 
           apiKey="AC79604A-1C42-401D-AEEB-603CEE7C57B2" 
           chain={base}
-          // JANGAN gunakan properti 'config' di sini karena tidak didukung
         >
           {children}
         </OnchainKitProvider>
