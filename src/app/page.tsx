@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import sdk from '@farcaster/frame-sdk';
+// UPDATE: Menggunakan SDK baru sesuai instruksi Tim Base
+import { sdk } from '@farcaster/miniapp-sdk'; 
 import { 
   ConnectWallet, 
   Wallet, 
@@ -30,13 +31,15 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
+        // UPDATE: SDK baru menggunakan pola ini
         const context = await sdk.context;
         if (context?.user?.displayName) {
           setUserName(context.user.displayName);
         }
+        // Memberitahu Farcaster aplikasi siap
         sdk.actions.ready();
       } catch (error) {
-        console.error("Farcaster SDK load failed:", error);
+        console.error("Farcaster Mini-app SDK load failed:", error);
       }
     };
 
@@ -45,7 +48,6 @@ export default function Home() {
       load();
     }
 
-    // Ambil data waktu terakhir dari memori HP
     const savedTime = localStorage.getItem('last_gm_checkin');
     if (savedTime) {
       setLastCheckIn(parseInt(savedTime));
@@ -76,12 +78,11 @@ export default function Home() {
   }, [lastCheckIn]);
 
   const handleStatus = (status: LifecycleStatus) => {
-    // Memastikan notifikasi muncul saat transaksi benar-benar berhasil
     if (status.statusName === 'success') {
       const now = Date.now();
       localStorage.setItem('last_gm_checkin', now.toString());
       setLastCheckIn(now);
-      alert("✅ GM Berhasil! Kamu sudah check-in. Sampai jumpa 12 jam lagi!");
+      alert("✅ GM Berhasil! Kamu sudah check-in.");
     }
   };
 
@@ -97,7 +98,7 @@ export default function Home() {
       <header className="flex justify-between items-center p-4 bg-black/40 backdrop-blur-xl border-b border-white/10 sticky top-0 z-20">
         <h1 className="text-xl font-black italic tracking-tighter text-blue-500">BASSY GM</h1>
         <Wallet>
-          <ConnectWallet className="bg-blue-600 rounded-full px-4 py-2 text-sm text-white border-none">
+          <ConnectWallet className="bg-blue-600 rounded-full px-4 py-2 text-sm text-white border-none transition-all active:scale-95">
             <Avatar className="h-4 w-4" />
             <Name />
           </ConnectWallet>
@@ -106,25 +107,25 @@ export default function Home() {
 
       <main className="relative z-10 flex-grow flex flex-col items-center justify-start p-6 text-center">
         
-        {/* Navigasi Link */}
+        {/* Tombol Navigasi Menu */}
         <div className="grid grid-cols-2 gap-3 w-full max-w-md mt-2 mb-8 px-2">
-            <a href="https://wild-event-563.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+            <a href="https://wild-event-563.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>
               Neynar & Spam
             </a>
-            <a href="https://success-settlers-744.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+            <a href="https://success-settlers-744.app.ohara.ai/" target="_blank" className="bg-white/5 border border-white/10 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95">
               <span className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse"></span>
               Bassy Chart
             </a>
         </div>
 
-        <div className="max-w-md w-full bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl">
+        <div className="max-w-md w-full bg-white/5 backdrop-blur-2xl p-8 rounded-[3rem] border border-white/10 space-y-6 shadow-2xl transition-all">
           <div className="space-y-4">
             <img src="/logo-baru.png" alt="Logo" className="w-24 h-24 mx-auto object-contain animate-[bounce_4s_infinite]" />
-            <h2 className="text-2xl font-black italic tracking-tight">GM, {userName || 'Anon'}! 🔵</h2>
+            <h2 className="text-2xl font-black italic tracking-tight uppercase">GM, {userName || 'Anon'}! 🔵</h2>
           </div>
 
-          <div className="w-full min-h-[60px]"> {/* Menjaga tinggi area tombol agar tidak goyang */}
+          <div className="w-full min-h-[60px]">
             {canCheckIn ? (
               <Transaction
                 chainId={8453}
@@ -150,7 +151,7 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 pt-2">
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest flex items-center gap-2">
               <span className={`w-1.5 h-1.5 rounded-full animate-pulse shadow-sm ${canCheckIn ? 'bg-green-500 shadow-green-500' : 'bg-yellow-500 shadow-yellow-500'}`}></span>
-              {canCheckIn ? 'Status: Ready to GM' : 'Status: Waiting Period'}
+              {canCheckIn ? 'Status: Ready' : 'Status: Waiting Period'}
             </div>
           </div>
         </div>
