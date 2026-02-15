@@ -10,7 +10,7 @@ const BUILDER_CODE = 'bc_3so7rnx9';
 const PAYMASTER_URL = 'https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f';
 const CONTRACT_ADDRESS = '0x1D6837873D70E989E733e83F676B66b96fB690A8'; 
 
-// Fungsi Helper (Diluar komponen agar rapi)
+// Fungsi Helper Builder Code (ERC-8021)
 function createBuilderCodeSuffix(code) {
   const codeHex = Array.from(code).map(c => c.charCodeAt(0).toString(16)).join('');
   const codeLength = (code.length).toString(16).padStart(2, '0');
@@ -29,7 +29,6 @@ export default function Home() {
   useEffect(() => {
     const init = async () => {
       try {
-        // Coba load context user
         const context = await sdk.context;
         if (context && context.user) {
           setUserName(context.user.displayName || "Hunter");
@@ -38,7 +37,6 @@ export default function Home() {
       } catch (e) {
         console.error("SDK Error:", e);
       } finally {
-        // Wajib panggil ini agar tidak blank
         sdk.actions.ready();
         setIsSDKLoaded(true);
       }
@@ -47,14 +45,11 @@ export default function Home() {
   }, []);
 
   const handleStatus = (status) => {
-    console.log("Tx Status:", status);
-    
     if (status.statusName === 'transactionPending') {
         setStatusMessage("🚀 Mengirim ke Blockchain...");
     } 
     else if (status.statusName === 'success') {
         setStatusMessage("✅ GM Berhasil Dikirim!");
-        // Ambil hash transaksi dengan aman
         if (status.transactionReceipts && status.transactionReceipts.length > 0) {
             setTxHash(status.transactionReceipts[0].transactionHash);
         }
@@ -68,31 +63,27 @@ export default function Home() {
     sdk.actions.openUrl(url);
   }, []);
 
-  // Siapkan data transaksi + Builder Code
+  // --- LOGIKA TRANSAKSI + BUILDER CODE ---
+  // Data asli (checkIn/mint): 0x1249c58b (dari kode page lama kamu)
+  // Kita tambahkan suffix Builder Code dibelakangnya
   const builderSuffix = createBuilderCodeSuffix(BUILDER_CODE);
-  // Hapus '0x' dari suffix sebelum digabung karena data depan sudah ada '0x'
   const finalSuffix = builderSuffix.replace('0x', '');
-  const txData = '0x1249c58b' + finalSuffix;
+  const txData = '0x1249c58b' + finalSuffix; 
 
-  // Tampilan Loading sederhana
   if (!isSDKLoaded) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-black text-white">
-        Loading...
-      </div>
-    );
+    return <div className="flex h-screen items-center justify-center bg-black text-white">Loading...</div>;
   }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col font-sans relative overflow-hidden">
       
-      {/* Background Effect */}
+      {/* Background Modern */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-black z-0 pointer-events-none" />
       
       {/* Konten Utama */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
         
-        {/* Foto Profil */}
+        {/* Profile */}
         <div className="mb-8 relative">
           <div className="absolute -inset-1 bg-blue-500 rounded-full blur opacity-50"></div>
           <img 
@@ -103,7 +94,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Teks Sapaan */}
+        {/* Text */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-black text-white mb-2">
             GM, <span className="text-blue-400">{userName}</span>
@@ -113,7 +104,7 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Kartu Transaksi */}
+        {/* Transaction Card */}
         <div className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 shadow-2xl mb-6">
             
             {statusMessage && (
@@ -153,7 +144,7 @@ export default function Home() {
             )}
         </div>
 
-        {/* Tombol Tambahan */}
+        {/* Buttons */}
         <div className="grid grid-cols-2 gap-3 w-full">
             <button 
                 onClick={() => openLink("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")}
