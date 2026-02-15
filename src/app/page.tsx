@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { sdk } from '@farcaster/miniapp-sdk';
 
-// --- KONFIGURASI ---
+// --- KONFIGURASI TETAP ---
 const BUILDER_CODE = 'bc_3so7rnx9';
 const CONTRACT_ADDRESS = '0x1D6837873D70E989E733e83F676B66b96fB690A8';
 
@@ -33,6 +33,7 @@ export default function Home() {
         }
       } catch (e) { console.error(e); }
       finally {
+        // Wajib panggil ini agar host (Warpcast/Base) tahu aplikasi siap
         sdk.actions.ready();
         setIsReady(true);
       }
@@ -40,14 +41,14 @@ export default function Home() {
     start();
   }, []);
 
-  // --- FUNGSI TRANSAKSI NATIVE FARCASTER ---
+  // --- FUNGSI TRANSAKSI NATIVE (TANPA POP-UP) ---
   const sendGmNative = useCallback(async () => {
     setMsg("⏳ Membuka Dompet...");
     const suffix = createBuilderCodeSuffix(BUILDER_CODE).replace('0x', '');
     const txData = '0x1249c58b' + suffix;
 
     try {
-      // Menggunakan SDK Actions untuk memicu transaksi di dalam Warpcast
+      // Menggunakan sdk.actions.sendTransaction agar diproses internal oleh host
       const result = await sdk.actions.sendTransaction({
         chainId: 8453, // Base Mainnet
         to: CONTRACT_ADDRESS,
@@ -61,7 +62,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error(error);
-      setMsg("❌ Transaksi Dibatalkan.");
+      setMsg("❌ Transaksi Gagal/Dibatalkan.");
       setTimeout(() => setMsg(""), 3000);
     }
   }, []);
@@ -69,7 +70,7 @@ export default function Home() {
   if (!isReady) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center font-sans">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
       <div className="absolute top-0 w-full h-64 bg-blue-600/10 blur-[100px] pointer-events-none" />
       
       <div className="relative z-10 w-full max-w-sm">
@@ -102,8 +103,8 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 mt-6">
-          <button onClick={() => sdk.actions.openUrl("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")} className="bg-zinc-900/30 border border-white/5 py-3.5 rounded-2xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:bg-zinc-800 transition-all">🛡️ Spam</button>
-          <button onClick={() => sdk.actions.openUrl("https://dune.com/base/base-metrics")} className="bg-zinc-900/30 border border-white/5 py-3.5 rounded-2xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:bg-zinc-800 transition-all">📊 Chart</button>
+          <button onClick={() => sdk.actions.openUrl("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")} className="bg-zinc-900/30 border border-white/5 py-3.5 rounded-2xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest">🛡️ Spam</button>
+          <button onClick={() => sdk.actions.openUrl("https://dune.com/base/base-metrics")} className="bg-zinc-900/30 border border-white/5 py-3.5 rounded-2xl text-[10px] font-bold text-zinc-400 uppercase tracking-widest">📊 Chart</button>
         </div>
         
         <p className="mt-12 text-[8px] text-zinc-800 font-bold uppercase tracking-[0.4em]">ID: {BUILDER_CODE}</p>
