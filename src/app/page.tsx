@@ -20,72 +20,81 @@ function createBuilderCodeSuffix(code) {
 }
 
 export default function Home() {
-  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [userName, setUserName] = useState("Hunter");
   const [userPfp, setUserPfp] = useState("/og-logobaru.jpeg");
-  const [statusMessage, setStatusMessage] = useState("");
-  const [txHash, setTxHash] = useState(null);
+  const [msg, setMsg] = useState("");
+  const [hash, setHash] = useState(null);
 
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
 
   useEffect(() => {
-    const init = async () => {
+    async function start() {
       try {
-        const context = await sdk.context;
-        if (context && context.user) {
-          setUserName(context.user.displayName || "Hunter");
-          setUserPfp(context.user.pfpUrl || "/og-logobaru.jpeg");
+        const ctx = await sdk.context;
+        if (ctx?.user) {
+          setUserName(ctx.user.displayName || "Hunter");
+          setUserPfp(ctx.user.pfpUrl || "/og-logobaru.jpeg");
         }
         if (!isConnected) {
           connect({ connector: coinbaseWallet({ appName: 'Bassy GM' }) });
         }
       } catch (e) {
-        console.error("SDK Error:", e);
+        console.error(e);
       } finally {
         sdk.actions.ready();
-        setIsSDKLoaded(true);
+        setIsReady(true);
       }
-    };
-    init();
+    }
+    start();
   }, [connect, isConnected]);
 
-  const handleStatus = useCallback((status) => {
-    // LANGSUNG DETEKSI RECEIPT (Cara tercepat hilangkan loading)
-    if (status.transactionReceipts && status.transactionReceipts.length > 0) {
-        setStatusMessage("✅ GM Berhasil!");
-        setTxHash(status.transactionReceipts[0].transactionHash);
-        return;
-    }
-
-    if (status.statusName === 'transactionPending' || status.statusName === 'building') {
-        setStatusMessage("⏳ Memproses...");
-    } else if (status.statusName === 'success') {
-        setStatusMessage("✅ GM Berhasil!");
-    } else if (status.statusName === 'error') {
-        setStatusMessage("❌ Gagal.");
+  const onStatus = useCallback((s) => {
+    if (s.transactionReceipts?.length > 0) {
+      setMsg("✅ GM Berhasil!");
+      setHash(s.transactionReceipts[0].transactionHash);
+    } else if (s.statusName === 'transactionPending' || s.statusName === 'building') {
+      setMsg("⏳ Memproses...");
+    } else if (s.statusName === 'error') {
+      setMsg("❌ Gagal.");
     }
   }, []);
 
-  const openLink = (url) => sdk.actions.openUrl(url);
   const builderSuffix = createBuilderCodeSuffix(BUILDER_CODE);
   const txData = '0x1249c58b' + builderSuffix.replace('0x', '');
 
-  if (!isSDKLoaded) return null;
+  if (!isReady) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col font-sans relative overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[250px] bg-blue-600/20 blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+      <div className="absolute top-0 w-full h-64 bg-blue-600/10 blur-[100px]" />
       
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
-        <div className="mb-6 relative">
-          <div className="absolute inset-0 bg-blue-500 rounded-full blur-[15px] opacity-30"></div>
-          <img src={userPfp} className="relative w-24 h-24 rounded-full border border-white/10 shadow-2xl object-cover" onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }} />
+      <div className="relative z-10 w-full max-w-sm text-center">
+        <img src={userPfp} className="w-24 h-24 rounded-full mx-auto mb-4 border border-white/10 shadow-xl" onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }} />
+        <h1 className="text-3xl font-black mb-1 uppercase italic">GM, {userName}</h1>
+        <p className="text-blue-500 text-[10px] font-bold tracking-widest mb-8">{address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Connecting..."}</p>
+
+        <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-6 backdrop-blur-xl shadow-2xl">
+          {msg && <div className="mb-4 text-[10px] font-bold py-2 bg-blue-500/10 text-blue-300 rounded-lg">{msg}</div>}
+          
+          <Transaction chainId={8453} calls={[{ to: CONTRACT_ADDRESS, data: txData, value: BigInt(0) }]} onStatus={onStatus} capabilities={{ paymasterService: { url: PAYMASTER_URL } }}>
+            <TransactionButton text="SEND GM BASE ⚡" className="w-full !bg-blue-600 !text-white font-black py-4 rounded-xl active:scale-95 transition-all" />
+            <TransactionStatus><TransactionStatusLabel className="text-[9px] uppercase text-zinc-600 mt-2 block" /></TransactionStatus>
+          </Transaction>
+
+          {hash && (
+            <button onClick={() => sdk.actions.openUrl(`https://basescan.org/tx/${hash}`)} className="mt-4 text-[9px] text-zinc-500 underline uppercase font-bold">View Transaction</button>
+          )}
         </div>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black mb-1 uppercase italic">GM, {userName}</h1>
-          <p className="text-blue-500 text-[10px] font-bold tracking-widest uppercase">{address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Connecting..."}</p>
+        <div className="grid grid-cols-2 gap-3 mt-6">
+          <button onClick={() => sdk.actions.openUrl("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")} className="bg-zinc-900/50 border border-white/5 py-3 rounded-xl text-[10px] font-bold text-zinc-400 uppercase">🛡️ Spam Check</button>
+          <button onClick={() => sdk.actions.openUrl("https://dune.com/base/base-metrics")} className="bg-zinc-900/50 border border-white/5 py-3 rounded-xl text-[10px] font-bold text-zinc-400 uppercase">📊 Bassy Chart</button>
         </div>
-
-        <div className="w-full bg-
+        
+        <p className="mt-12 text-[8px] text-zinc-800 font-bold uppercase tracking-[0.4em]">ID: {BUILDER_CODE}</p>
+      </div>
+    </div>
+  );
+}
