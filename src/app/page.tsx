@@ -1,158 +1,187 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { sdk } from '@farcaster/miniapp-sdk'; 
 import { Transaction, TransactionButton, TransactionStatus, TransactionStatusLabel } from '@coinbase/onchainkit/transaction';
 import type { LifecycleStatus } from '@coinbase/onchainkit/transaction';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
-// Komponen Overlay Animasi Metaverse (sederhana)
-const MetaverseOverlay = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-    {/* Grid Neon */}
-    <div className="absolute inset-0 bg-grid-neon opacity-20 animate-pulse-slow"></div>
-    {/* Partikel Terbang */}
-    <div className="absolute inset-0 flex items-center justify-center">
-      {[...Array(50)].map((_, i) => (
-        <div 
-          key={i} 
-          className="absolute w-1 h-1 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full animate-float blur-sm" 
-          style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${5 + Math.random() * 5}s`,
-          }}
-        />
-      ))}
-    </div>
-  </div>
-);
+// --- KONFIGURASI PENTING (JANGAN DIHAPUS) ---
+const BUILDER_CODE = 'bc_3so7rnx9'; // Kode Builder kamu
+const PAYMASTER_URL = 'https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f';
+const CONTRACT_ADDRESS = '0x1D6837873D70E989E733e83F676B66b96fB690A8'; // Alamat Kontrak GM
+
+// Fungsi untuk membuat Data Suffix ERC-8021 (Builder Code)
+// Referensi: https://blog.base.dev/builder-codes-and-erc-8021-fixing-onchain-attribution
+function createBuilderCodeSuffix(code: string): string {
+  // Convert string code to hex
+  const codeHex = Array.from(code).map(c => c.charCodeAt(0).toString(16)).join('');
+  const codeLength = (code.length).toString(16).padStart(2, '0');
+  
+  // Standar ERC-8021 Marker
+  const ercMarker = '80218021802180218021802180218021';
+  const schemaId = '00';
+  
+  // Format: CodeHex + Length + SchemaId + Marker
+  return `0x${codeHex}${codeLength}${schemaId}${ercMarker}`;
+}
 
 export default function Home() {
+  const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [userName, setUserName] = useState("Hunter");
-  const [userPfp, setUserPfp] = useState("/og-logobaru.jpeg"); // Menggunakan logo baru
-  const [loading, setLoading] = useState(false);
-  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [userPfp, setUserPfp] = useState("/og-logobaru.jpeg");
   const [statusMessage, setStatusMessage] = useState("");
+  const [txHash, setTxHash] = useState<string | null>(null);
 
+  // Inisialisasi Farcaster SDK
   useEffect(() => {
     const init = async () => {
       try {
         const context = await sdk.context;
         if (context?.user) {
           setUserName(context.user.displayName || "Hunter");
-          // Gunakan PFP user jika tersedia, jika tidak pakai logo default
           setUserPfp(context.user.pfpUrl || "/og-logobaru.jpeg");
         }
+        // Memberitahu Warpcast bahwa aplikasi siap ditampilkan
         sdk.actions.ready();
+        setIsSDKLoaded(true);
       } catch (e) {
         console.error("SDK Init Error:", e);
+        // Tetap jalankan ready agar tidak stuck loading walau error
+        sdk.actions.ready();
       }
     };
     init();
   }, []);
 
   const handleStatus = (status: LifecycleStatus) => {
+    console.log("Transaction Status:", status);
+    
     switch (status.statusName) {
-      case 'init':
-        setLoading(true);
-        setStatusMessage("⏳ Membuka Dompet...");
-        break;
       case 'transactionPending':
-        setLoading(true);
         setStatusMessage("🚀 Mengirim ke Blockchain...");
         break;
       case 'success':
-        setLoading(false);
         setStatusMessage("✅ GM Berhasil Dikirim!");
-        setTimeout(() => setStatusMessage(""), 3000); // Hapus pesan setelah 3 detik
+        // Simpan hash transaksi jika tersedia di data receipt
+        if (status.transactionReceipts && status.transactionReceipts.length > 0) {
+            setTxHash(status.transactionReceipts[0].transactionHash);
+        }
         break;
       case 'error':
-        setLoading(false);
-        setStatusMessage("❌ Transaksi Gagal atau Dibatalkan!");
-        setTimeout(() => setStatusMessage(""), 3000); // Hapus pesan setelah 3 detik
+        setStatusMessage("❌ Gagal. Coba lagi.");
         break;
+      default:
+        setStatusMessage("");
     }
   };
 
-  const handleActionClick = (url: string) => {
+  const openLink = useCallback((url: string) => {
     sdk.actions.openUrl(url);
-  };
+  }, []);
+
+  // Persiapan Data Transaksi dengan Builder Code
+  const builderSuffix = createBuilderCodeSuffix(BUILDER_CODE);
+  // Data asli '0x1249c58b' + Suffix (tanpa 0x di suffix karena digabung)
+  // Perhatikan: Data asli harus hex, suffix kita sudah siapkan formatnya.
+  // Karena wagmi/viem biasanya menangani 'data' sebagai hex string, 
+  // kita gabungkan manual: data asli + suffix (tanpa 0x depannya)
+  const txData = `0x1249c58b${builderSuffix.replace('0x', '')}` as `0x${string}`;
+
+  if (!isSDKLoaded) {
+    return <div className="flex h-screen items-center justify-center bg-black text-white">Loading Bassy GM...</div>;
+  }
 
   return (
-    <main className="relative min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-sans overflow-hidden">
-      <MetaverseOverlay /> {/* Animasi Metaverse */}
-
-      {/* Status Bar Neon */}
-      {statusMessage && (
-        <div className="fixed top-0 left-0 right-0 z-50 p-4 text-center bg-gradient-to-r from-blue-600 to-fuchsia-600 text-sm font-bold shadow-xl animate-fade-in-down">
-          {statusMessage}
-        </div>
-      )}
-
-      {/* Kartu Utama */}
-      <div className="relative z-10 w-full max-w-sm bg-gradient-to-br from-gray-900/80 to-black/80 backdrop-blur-xl border border-blue-500/30 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(59,130,246,0.3)] text-center animate-scale-in">
-        <div className="relative mx-auto w-28 h-28 mb-6">
-          <img src={userPfp} className="rounded-full border-4 border-blue-600 shadow-[0_0_20px_rgba(59,130,246,0.7)] object-cover w-full h-full" alt="profile or logo" />
-          {loading && <div className="absolute inset-0 border-t-4 border-l-4 border-blue-400 rounded-full animate-spin"></div>}
-        </div>
-
-        <h1 className="text-4xl font-black italic tracking-tighter mb-2 uppercase text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">GM, {userName}</h1>
-        <p className="text-sm font-bold tracking-[0.2em] uppercase text-fuchsia-400 mb-10">Bassy Protocol</p>
-
-        {/* Tombol SEND GM BASE */}
-        <Transaction 
-          chainId={8453} 
-          calls={[{ to: '0x1D6837873D70E989E733e83F676B66b96fB690A8', data: '0x1249c58b', value: BigInt(0) }]} 
-          onStatus={handleStatus}
-          capabilities={{ 
-            paymasterService: { url: 'https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f' } 
-          }}
-        >
-          <TransactionButton 
-            text={loading ? "TRANSACTION IN PROGRESS..." : "SEND GM BASE"} 
-            className="w-full bg-gradient-to-br from-blue-600 to-fuchsia-600 hover:from-blue-500 hover:to-fuchsia-500 text-white font-black py-5 rounded-2xl transition-all duration-300 active:scale-95 shadow-[0_0_30px_rgba(59,130,246,0.5)] uppercase text-lg mb-4" 
+    <main className="min-h-screen bg-black text-white flex flex-col font-sans relative overflow-hidden">
+      
+      {/* Background Effects (Modern & Ringan) */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-black to-black z-0 pointer-events-none" />
+      
+      {/* Content Container */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
+        
+        {/* Profile Section */}
+        <div className="mb-8 relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full blur opacity-40 group-hover:opacity-75 transition duration-1000"></div>
+          <img 
+            src={userPfp} 
+            alt="Profile" 
+            className="relative w-24 h-24 rounded-full border-2 border-white/10 shadow-2xl object-cover"
+            onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }} // Fallback jika gambar error
           />
-          <TransactionStatus className="text-[10px] uppercase font-bold text-zinc-400 mt-2">
-            <TransactionStatusLabel />
-          </TransactionStatus>
-        </Transaction>
+        </div>
 
-        {/* Tombol Lainnya (Membuka setelah diklik) */}
-        <button 
-          onClick={() => setShowMoreActions(!showMoreActions)} 
-          className="mt-6 w-full text-xs font-bold uppercase tracking-wide text-blue-400 hover:text-fuchsia-400 transition-colors duration-200"
-        >
-          {showMoreActions ? "▲ HIDE ACTIONS" : "▼ MORE ACTIONS"}
-        </button>
+        {/* Header Text */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
+            GM, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">{userName}</span>
+          </h1>
+          <p className="text-zinc-500 text-sm font-medium tracking-widest uppercase">Bassy Protocol Enabled</p>
+        </div>
 
-        {showMoreActions && (
-          <div className="mt-4 space-y-3 animate-fade-in">
-            <button 
-              onClick={() => handleActionClick("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")} 
-              className="w-full bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-4 rounded-xl text-md transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(168,85,247,0.4)] uppercase"
+        {/* Transaction Card */}
+        <div className="w-full bg-zinc-900/50 backdrop-blur-md border border-zinc-800 rounded-3xl p-6 shadow-xl mb-6">
+            
+            {statusMessage && (
+                <div className={`mb-4 text-center text-sm font-bold py-2 rounded-lg ${statusMessage.includes("✅") ? "bg-green-500/20 text-green-400" : "bg-blue-500/20 text-blue-400"}`}>
+                    {statusMessage}
+                </div>
+            )}
+
+            <Transaction 
+              chainId={8453} 
+              calls={[{ 
+                to: CONTRACT_ADDRESS, 
+                data: txData, // Data sudah termasuk Builder Code
+                value: BigInt(0) 
+              }]} 
+              onStatus={handleStatus}
+              capabilities={{ 
+                paymasterService: { url: PAYMASTER_URL } 
+              }}
             >
-              Neynar & Spam
+              <TransactionButton 
+                text="SEND GM ⚡" 
+                className="w-full bg-white text-black font-bold text-lg py-4 rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]" 
+              />
+              <TransactionStatus className="block text-center mt-3 text-xs text-zinc-500" >
+                <TransactionStatusLabel />
+              </TransactionStatus>
+            </Transaction>
+            
+            {txHash && (
+                <button 
+                    onClick={() => openLink(`https://basescan.org/tx/${txHash}`)}
+                    className="mt-4 w-full text-xs text-zinc-400 underline decoration-zinc-700 hover:text-white"
+                >
+                    View on Basescan
+                </button>
+            )}
+        </div>
+
+        {/* Secondary Actions (Clean & Minimalist) */}
+        <div className="grid grid-cols-2 gap-3 w-full">
+            <button 
+                onClick={() => openLink("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")}
+                className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-sm transition-colors"
+            >
+               🛡️ Check Spam
             </button>
             <button 
-              onClick={() => handleActionClick("https://dune.com/base/base-metrics")} 
-              className="w-full bg-gradient-to-br from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-white font-bold py-4 rounded-xl text-md transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(34,197,94,0.4)] uppercase"
+                onClick={() => openLink("https://dune.com/base/base-metrics")}
+                className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-sm transition-colors"
             >
-              Bassy Chart
+               📊 Bassy Chart
             </button>
-            <button 
-              onClick={() => handleActionClick("https://www.google.com/search?q=free+nft+mint+base")} // Link ke pencarian Google sementara
-              className="w-full bg-gradient-to-br from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold py-4 rounded-xl text-md transition-all duration-300 active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.4)] uppercase"
-            >
-              Mint NFT Free
-            </button>
-          </div>
-        )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 opacity-30">
+            <p className="text-[10px] font-mono text-zinc-500 uppercase">Powered by Base • {BUILDER_CODE}</p>
+        </div>
+
       </div>
-
-      <footer className="relative z-10 mt-12 text-[10px] text-zinc-700 font-black uppercase tracking-[0.3em] opacity-80">
-        Bassy Ecosystem • {new Date().getFullYear()}
-      </footer>
     </main>
   );
 }
