@@ -37,20 +37,14 @@ export default function Home() {
           setUserName(ctx.user.displayName || "Hunter");
           setUserPfp(ctx.user.pfpUrl || "/og-logobaru.jpeg");
         }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        sdk.actions.ready();
+      } catch (e) { console.error(e); }
+      finally {
+        sdk.actions.ready(); // Memberitahu host bahwa miniapp siap
         setIsReady(true);
       }
     }
     start();
   }, []);
-
-  // Fungsi manual untuk koneksi jika terblokir (PENTING)
-  const handleConnect = useCallback(() => {
-    connect({ connector: coinbaseWallet({ appName: 'Bassy GM', preference: 'smartWalletOnly' }) });
-  }, [connect]);
 
   const onStatus = useCallback((s) => {
     if (s.transactionReceipts?.length > 0) {
@@ -59,33 +53,28 @@ export default function Home() {
     } else if (s.statusName === 'transactionPending') {
       setMsg("⏳ Memproses...");
     } else if (s.statusName === 'error') {
-      setMsg("❌ Gagal. Pastikan Pop-up diizinkan.");
+      setMsg("❌ Gagal. Selesaikan di Dompet.");
     }
   }, []);
 
+  // Builder Code Data
   const builderSuffix = createBuilderCodeSuffix(BUILDER_CODE);
   const txData = '0x1249c58b' + builderSuffix.replace('0x', '');
 
   if (!isReady) return null;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
       <div className="absolute top-0 w-full h-64 bg-blue-600/10 blur-[100px] pointer-events-none" />
       
-      <div className="relative z-10 w-full max-w-sm text-center">
-        <img src={userPfp} className="w-24 h-24 rounded-full mx-auto mb-4 border border-white/10 shadow-2xl object-cover" onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }} />
+      <div className="relative z-10 w-full max-w-sm">
+        <img src={userPfp} className="w-24 h-24 rounded-full mx-auto mb-4 border border-white/10" onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }} />
         <h1 className="text-3xl font-black mb-1 uppercase italic">GM, {userName}</h1>
         
-        {/* Tombol Koneksi jika Belum Terhubung */}
-        {!isConnected ? (
-          <button onClick={handleConnect} className="mb-8 text-blue-400 text-[10px] font-bold tracking-widest uppercase border border-blue-400/20 px-4 py-1 rounded-full bg-blue-400/5 animate-pulse">
-            Klik untuk Hubungkan Dompet
-          </button>
-        ) : (
-          <p className="text-blue-500 text-[10px] font-bold tracking-widest mb-8 uppercase italic">
-            Connected: {address.slice(0,6)}...{address.slice(-4)}
-          </p>
-        )}
+        {/* Wallet Address Display */}
+        <p className="text-blue-500 text-[10px] font-bold tracking-widest mb-8">
+          {address ? `Connected: ${address.slice(0,6)}...${address.slice(-4)}` : "Initializing Wallet..."}
+        </p>
 
         <div className="bg-zinc-900/50 border border-white/5 rounded-3xl p-6 backdrop-blur-xl shadow-2xl">
           {msg && <div className="mb-4 text-[10px] font-bold py-2 bg-blue-500/10 text-blue-300 rounded-lg">{msg}</div>}
@@ -96,9 +85,10 @@ export default function Home() {
             onStatus={onStatus} 
             capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
           >
+            {/* Tombol yang kompatibel dengan Farcaster & Baseapp */}
             <TransactionButton 
               text="SEND GM BASE ⚡" 
-              className="w-full !bg-blue-600 !text-white font-black py-4 rounded-xl active:scale-95 transition-all shadow-lg" 
+              className="w-full !bg-blue-600 !text-white font-black py-4 rounded-xl active:scale-95 transition-all" 
             />
             <TransactionStatus>
               <TransactionStatusLabel className="text-[9px] uppercase text-zinc-600 mt-2 block" />
@@ -110,9 +100,10 @@ export default function Home() {
           )}
         </div>
 
+        {/* Action Buttons menggunakan sdk.actions untuk kompatibilitas Farcaster */}
         <div className="grid grid-cols-2 gap-3 mt-6">
-          <button onClick={() => sdk.actions.openUrl("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")} className="bg-zinc-900/40 border border-white/5 py-3 rounded-xl text-[10px] font-bold text-zinc-400 uppercase">🛡️ Spam</button>
-          <button onClick={() => sdk.actions.openUrl("https://dune.com/base/base-metrics")} className="bg-zinc-900/40 border border-white/5 py-3 rounded-xl text-[10px] font-bold text-zinc-400 uppercase">📊 Chart</button>
+          <button onClick={() => sdk.actions.openUrl("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")} className="bg-zinc-900/40 border border-white/5 py-3 rounded-xl text-[10px] font-bold text-zinc-400 uppercase">🛡️ Spam Check</button>
+          <button onClick={() => sdk.actions.openUrl("https://dune.com/base/base-metrics")} className="bg-zinc-900/40 border border-white/5 py-3 rounded-xl text-[10px] font-bold text-zinc-400 uppercase">📊 Bassy Chart</button>
         </div>
         
         <p className="mt-12 text-[8px] text-zinc-800 font-bold uppercase tracking-[0.4em]">ID: {BUILDER_CODE}</p>
