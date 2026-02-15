@@ -1,22 +1,37 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+// URL Deployment kamu (Pastikan ini benar)
+const appUrl = 'https://bassy-gm.vercel.app';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://bassy-gm.vercel.app/'), // Ganti dengan URL deployment Anda
+  metadataBase: new URL(appUrl),
   title: 'Bassy GM',
   description: 'GM On-Chain with Bassy, powered by Base.',
   openGraph: {
     title: 'Bassy GM',
-    description: 'GM On-Chain with Bassy, powered by Base.',
-    images: ['/og-logobaru.jpeg'], // Menggunakan logo baru
+    description: 'Send GM On-Chain with Bassy.',
+    images: [`${appUrl}/og-logobaru.jpeg`], 
   },
   other: {
-    'fc:frame': 'vNext',
-    'fc:frame:image': 'https://bassy-gm.vercel.app/og-logobaru.jpeg', // Ganti dengan URL deployment Anda
-    'fc:frame:button:1': 'SEND GM BASE',
-    'fc:frame:button:1:action': 'tx',
-    'fc:frame:button:1:target': 'https://bassy-gm.vercel.app/api/tx', // Endpoint API untuk transaksi
-    'fc:frame:button:1:post_url': 'https://bassy-gm.vercel.app/api/tx', // Endpoint API untuk post transaksi
+    // ID Aplikasi Base (JANGAN DIHAPUS)
+    'base:app_id': '6984afdb4609f1d788ad2be1', 
+    
+    // Konfigurasi Frame v2 Standar
+    'fc:frame': JSON.stringify({
+      version: "next",
+      imageUrl: `${appUrl}/og-logobaru.jpeg`, 
+      button: {
+        title: "Launch Bassy GM",
+        action: {
+          type: "launch_frame",
+          name: "Bassy GM",
+          url: appUrl,
+          splashImageUrl: `${appUrl}/og-logobaru.jpeg`,
+          splashBackgroundColor: "#000000",
+        },
+      },
+    }),
   },
 };
 
@@ -27,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased bg-black text-white">{children}</body>
     </html>
   );
 }
