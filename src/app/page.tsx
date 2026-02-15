@@ -7,7 +7,6 @@ import { Transaction, TransactionButton, TransactionStatus, TransactionStatusLab
 import { useAccount, useConnect } from 'wagmi';
 import { coinbaseWallet } from 'wagmi/connectors';
 
-// --- KONFIGURASI ---
 const BUILDER_CODE = 'bc_3so7rnx9'; 
 const PAYMASTER_URL = 'https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f';
 const CONTRACT_ADDRESS = '0x1D6837873D70E989E733e83F676B66b96fB690A8'; 
@@ -27,7 +26,6 @@ export default function Home() {
   const [statusMessage, setStatusMessage] = useState("");
   const [txHash, setTxHash] = useState(null);
 
-  // Wagmi Hooks untuk memastikan koneksi dompet otomatis
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
 
@@ -39,8 +37,6 @@ export default function Home() {
           setUserName(context.user.displayName || "Hunter");
           setUserPfp(context.user.pfpUrl || "/og-logobaru.jpeg");
         }
-        
-        // Hubungkan dompet secara otomatis saat aplikasi dimuat
         if (!isConnected) {
           connect({ connector: coinbaseWallet({ appName: 'Bassy GM' }) });
         }
@@ -54,20 +50,27 @@ export default function Home() {
     init();
   }, [connect, isConnected]);
 
-  const handleStatus = (status) => {
-    if (status.statusName === 'transactionPending') {
-        setStatusMessage("🚀 Mengirim ke Blockchain...");
+  // Handler Status yang lebih responsif
+  const handleStatus = useCallback((status) => {
+    console.log("Current Status:", status.statusName);
+    
+    if (status.statusName === 'transactionPending' || status.statusName === 'building') {
+        setStatusMessage("⏳ Memproses Transaksi...");
     } 
+    else if (status.statusName === 'transactionIdle') {
+        setStatusMessage("");
+    }
     else if (status.statusName === 'success') {
-        setStatusMessage("✅ GM Berhasil Dikirim!");
+        setStatusMessage("✅ GM Berhasil Terkirim!");
         if (status.transactionReceipts && status.transactionReceipts.length > 0) {
             setTxHash(status.transactionReceipts[0].transactionHash);
         }
     } 
     else if (status.statusName === 'error') {
-        setStatusMessage("❌ Gagal. Pastikan saldo cukup/jaringan Base.");
+        setStatusMessage("❌ Gagal. Silakan coba lagi.");
+        setTimeout(() => setStatusMessage(""), 5000);
     }
-  };
+  }, []);
 
   const openLink = useCallback((url) => {
     sdk.actions.openUrl(url);
@@ -77,93 +80,86 @@ export default function Home() {
   const txData = '0x1249c58b' + builderSuffix.replace('0x', '');
 
   if (!isSDKLoaded) {
-    return <div className="flex h-screen items-center justify-center bg-black text-white">Loading Bassy...</div>;
+    return <div className="flex h-screen items-center justify-center bg-black text-zinc-500 font-mono text-xs tracking-widest">INITIALIZING BASSY...</div>;
   }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col font-sans relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-black z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_#1e3a8a_0%,_#000000_70%)] opacity-40 z-0" />
       
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
         
-        <div className="mb-8 relative">
-          <div className="absolute -inset-1 bg-blue-500 rounded-full blur opacity-50"></div>
+        {/* Profile Section */}
+        <div className="mb-6 relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-fuchsia-600 rounded-full blur opacity-30"></div>
           <img 
             src={userPfp} 
-            className="relative w-24 h-24 rounded-full border-2 border-white/20 shadow-xl object-cover"
+            className="relative w-24 h-24 rounded-full border border-white/10 shadow-2xl object-cover"
             onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }}
           />
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-white mb-2">
-            GM, <span className="text-blue-400">{userName}</span>
-          </h1>
-          <p className="text-zinc-500 text-xs font-bold tracking-widest uppercase">
-            {address ? `Wallet: ${address.slice(0,6)}...${address.slice(-4)}` : "Connecting Wallet..."}
+          <h1 className="text-3xl font-black text-white mb-1 tracking-tighter">GM, {userName}</h1>
+          <p className="text-blue-500 text-[10px] font-bold tracking-[0.3em] uppercase">
+            {address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Connecting..."}
           </p>
         </div>
 
-        <div className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 shadow-2xl mb-6">
+        {/* Transaction Container */}
+        <div className="w-full bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 shadow-2xl mb-6">
             
             {statusMessage && (
-                <div className="mb-4 text-center text-sm font-bold py-2 bg-blue-900/30 text-blue-300 rounded-lg">
+                <div className="mb-4 text-center text-xs font-bold py-3 bg-white/5 border border-white/10 text-blue-100 rounded-xl animate-pulse">
                     {statusMessage}
                 </div>
             )}
 
-            {/* Tombol Transaksi Utama */}
             <Transaction 
               chainId={8453} 
-              calls={[{ 
-                to: CONTRACT_ADDRESS, 
-                data: txData, 
-                value: BigInt(0) 
-              }]} 
+              calls={[{ to: CONTRACT_ADDRESS, data: txData, value: BigInt(0) }]} 
               onStatus={handleStatus}
-              capabilities={{ 
-                paymasterService: { url: PAYMASTER_URL } 
-              }}
+              capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
             >
+              {/* Tombol yang konsisten (tidak putih) */}
               <TransactionButton 
                 text="SEND GM ⚡" 
-                className="w-full bg-white text-black font-bold text-lg py-4 rounded-xl hover:opacity-90 transition-all active:scale-95" 
+                className="w-full bg-white text-black font-extrabold text-sm py-4 rounded-2xl hover:bg-zinc-200 transition-all active:scale-95 shadow-lg shadow-white/5" 
               />
-              <TransactionStatus className="block text-center mt-3 text-xs text-zinc-500">
-                <TransactionStatusLabel />
+              <TransactionStatus className="block text-center mt-4">
+                <TransactionStatusLabel className="text-[10px] uppercase tracking-widest text-zinc-600" />
               </TransactionStatus>
             </Transaction>
             
             {txHash && (
                 <button 
                     onClick={() => openLink(`https://basescan.org/tx/${txHash}`)}
-                    className="mt-4 w-full text-xs text-zinc-400 underline hover:text-white"
+                    className="mt-4 w-full text-[10px] font-bold text-zinc-500 hover:text-white transition-colors"
                 >
-                    View on Basescan
+                    [ VIEW ON BASESCAN ]
                 </button>
             )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 w-full">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3 w-full opacity-80">
             <button 
                 onClick={() => openLink("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")}
-                className="bg-zinc-900 border border-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-sm"
+                className="bg-zinc-900/50 border border-white/5 text-zinc-400 font-bold py-3 rounded-xl text-[10px] uppercase tracking-widest"
             >
                🛡️ Check Spam
             </button>
             <button 
                 onClick={() => openLink("https://dune.com/base/base-metrics")}
-                className="bg-zinc-900 border border-zinc-800 text-zinc-300 font-semibold py-3 rounded-xl text-sm"
+                className="bg-zinc-900/50 border border-white/5 text-zinc-400 font-bold py-3 rounded-xl text-[10px] uppercase tracking-widest"
             >
                📊 Bassy Chart
             </button>
         </div>
 
-        <div className="mt-8 opacity-30 text-center">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-widest">
-              BUILDER ATTR: {BUILDER_CODE}
-            </p>
-        </div>
+        <footer className="mt-12 text-[8px] text-zinc-700 font-bold tracking-[0.5em] uppercase">
+          Builder: {BUILDER_CODE}
+        </footer>
       </div>
     </main>
   );
