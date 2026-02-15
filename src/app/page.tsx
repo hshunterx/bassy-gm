@@ -75,12 +75,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#050505] text-white flex flex-col font-sans relative overflow-hidden">
-      {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[300px] bg-blue-600/20 blur-[120px] pointer-events-none" />
       
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
         
-        {/* Avatar Section */}
         <div className="mb-6 relative">
           <div className="absolute inset-0 bg-blue-500 rounded-full blur-[20px] opacity-40 animate-pulse"></div>
           <img 
@@ -99,7 +97,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Transaction Area - Perubahan Fokus Disini */}
         <div className="w-full bg-[#111111]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-8 shadow-2xl mb-8">
             
             {statusMessage && (
@@ -115,10 +112,10 @@ export default function Home() {
                 onStatus={handleStatus}
                 capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
               >
-                {/* Tombol dipaksa Muncul dengan styling yang sangat kontras */}
+                {/* PERBAIKAN WARNA: Background Biru, Teks Putih */}
                 <TransactionButton 
                   text="SEND GM BASE ⚡" 
-                  className="w-full !bg-white !text-black !opacity-100 font-black text-sm py-5 rounded-2xl hover:!bg-zinc-200 transition-all active:scale-95 !visible shadow-xl" 
+                  className="w-full !bg-blue-600 !text-white !opacity-100 font-black text-sm py-5 rounded-2xl hover:!bg-blue-500 transition-all active:scale-95 !visible shadow-lg shadow-blue-900/20" 
                 />
                 
                 <div className="mt-4 opacity-50">
@@ -139,7 +136,6 @@ export default function Home() {
             )}
         </div>
 
-        {/* Footer Actions */}
         <div className="grid grid-cols-2 gap-4 w-full">
             <button 
                 onClick={() => openLink("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")}
