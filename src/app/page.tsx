@@ -50,112 +50,42 @@ export default function Home() {
     init();
   }, [connect, isConnected]);
 
-  // --- PERBAIKAN LOGIKA STATUS (CEPAT & RESPONSIF) ---
   const handleStatus = useCallback((status) => {
-    console.log("Tx Status:", status.statusName);
-    
-    // 1. Jika ada Hash Transaksi, langsung anggap berhasil (Optimistic)
+    // LANGSUNG DETEKSI RECEIPT (Cara tercepat hilangkan loading)
     if (status.transactionReceipts && status.transactionReceipts.length > 0) {
-        setStatusMessage("✅ GM Sukses Terkirim!");
+        setStatusMessage("✅ GM Berhasil!");
         setTxHash(status.transactionReceipts[0].transactionHash);
-        return; // Keluar dari fungsi agar tidak tertimpa status lain
+        return;
     }
 
-    // 2. Jika sedang memproses
     if (status.statusName === 'transactionPending' || status.statusName === 'building') {
-        setStatusMessage("⏳ Memproses di Jaringan...");
-    } 
-    // 3. Jika benar-benar sukses dari sisi library
-    else if (status.statusName === 'success') {
-        setStatusMessage("✅ GM Sukses Terkirim!");
-    } 
-    // 4. Jika error
-    else if (status.statusName === 'error') {
-        setStatusMessage("❌ Gagal. Selesaikan di Wallet.");
+        setStatusMessage("⏳ Memproses...");
+    } else if (status.statusName === 'success') {
+        setStatusMessage("✅ GM Berhasil!");
+    } else if (status.statusName === 'error') {
+        setStatusMessage("❌ Gagal.");
     }
   }, []);
 
   const openLink = (url) => sdk.actions.openUrl(url);
-
   const builderSuffix = createBuilderCodeSuffix(BUILDER_CODE);
   const txData = '0x1249c58b' + builderSuffix.replace('0x', '');
 
   if (!isSDKLoaded) return null;
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white flex flex-col font-sans relative overflow-hidden">
-      {/* Background Effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[300px] bg-blue-600/20 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans relative overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[250px] bg-blue-600/20 blur-[100px] pointer-events-none" />
       
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
-        
-        {/* Profile */}
         <div className="mb-6 relative">
-          <div className="absolute inset-0 bg-blue-500 rounded-full blur-[20px] opacity-40"></div>
-          <img 
-            src={userPfp} 
-            className="relative w-28 h-28 rounded-full border-2 border-white/10 shadow-2xl object-cover"
-            onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }}
-          />
+          <div className="absolute inset-0 bg-blue-500 rounded-full blur-[15px] opacity-30"></div>
+          <img src={userPfp} className="relative w-24 h-24 rounded-full border border-white/10 shadow-2xl object-cover" onError={(e) => { e.currentTarget.src = "/og-logobaru.jpeg" }} />
         </div>
 
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-black text-white mb-2 tracking-tight uppercase italic">GM, {userName}</h1>
-          <div className="inline-block px-4 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full">
-            <p className="text-blue-400 text-[10px] font-bold tracking-[0.2em] uppercase">
-              {address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Connecting..."}
-            </p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-black mb-1 uppercase italic">GM, {userName}</h1>
+          <p className="text-blue-500 text-[10px] font-bold tracking-widest uppercase">{address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Connecting..."}</p>
         </div>
 
-        {/* Card Transaksi */}
-        <div className="w-full bg-[#111111]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-8 shadow-2xl mb-8">
-            
-            {statusMessage && (
-                <div className={`mb-6 text-center text-xs font-bold py-3 px-4 rounded-2xl border ${statusMessage.includes('✅') ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-blue-500/10 text-blue-300 border-blue-500/20 animate-pulse'}`}>
-                    {statusMessage}
-                </div>
-            )}
-
-            <div className="min-h-[80px] flex flex-col items-center justify-center">
-              <Transaction 
-                chainId={8453} 
-                calls={[{ to: CONTRACT_ADDRESS, data: txData, value: BigInt(0) }]} 
-                onStatus={handleStatus}
-                capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
-              >
-                <TransactionButton 
-                  text="SEND GM BASE ⚡" 
-                  className="w-full !bg-blue-600 !text-white font-black text-sm py-5 rounded-2xl hover:!bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20" 
-                />
-                
-                <div className="mt-4">
-                  <TransactionStatus>
-                    <TransactionStatusLabel className="text-[9px] uppercase tracking-[0.2em] text-center w-full block text-zinc-600" />
-                  </TransactionStatus>
-                </div>
-              </Transaction>
-            </div>
-            
-            {txHash && (
-                <div className="mt-6 flex flex-col items-center gap-3 animate-fade-in">
-                  <button 
-                      onClick={() => openLink(`https://basescan.org/tx/${txHash}`)}
-                      className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors tracking-widest"
-                  >
-                      — VIEW ON BASESCAN —
-                  </button>
-                </div>
-            )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4 w-full">
-            <button 
-                onClick={() => openLink("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")}
-                className="bg-zinc-900/40 border border-white/5 text-zinc-400 font-bold py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-all"
-            >
-               🛡️ Check Spam
-            </button>
-            <button 
-                onClick={() => openLink("
+        <div className="w-full bg-
