@@ -7,7 +7,6 @@ import { Transaction, TransactionButton, TransactionStatus, TransactionStatusLab
 import { useAccount, useConnect } from 'wagmi';
 import { coinbaseWallet } from 'wagmi/connectors';
 
-// --- KONFIGURASI TETAP ---
 const BUILDER_CODE = 'bc_3so7rnx9'; 
 const PAYMASTER_URL = 'https://api.developer.coinbase.com/rpc/v1/base/f8b308db-f748-402c-b50c-1c903a02862f';
 const CONTRACT_ADDRESS = '0x1D6837873D70E989E733e83F676B66b96fB690A8'; 
@@ -51,18 +50,23 @@ export default function Home() {
     init();
   }, [connect, isConnected]);
 
+  // Perbaikan deteksi status transaksi
   const handleStatus = useCallback((status) => {
+    console.log("Tx Status:", status.statusName);
+    
+    // Deteksi saat sedang diproses
     if (status.statusName === 'transactionPending' || status.statusName === 'building') {
-        setStatusMessage("⏳ Memproses di Jaringan...");
+        setStatusMessage("⏳ Sedang Memverifikasi...");
     } 
-    else if (status.statusName === 'success') {
-        setStatusMessage("✅ GM Berhasil Terkirim!");
-        if (status.transactionReceipts?.length > 0) {
+    // Deteksi sukses instan
+    else if (status.statusName === 'success' || (status.transactionReceipts && status.transactionReceipts.length > 0)) {
+        setStatusMessage("✅ GM Sukses Terkirim!");
+        if (status.transactionReceipts && status.transactionReceipts.length > 0) {
             setTxHash(status.transactionReceipts[0].transactionHash);
         }
     } 
     else if (status.statusName === 'error') {
-        setStatusMessage("❌ Gagal. Coba lagi.");
+        setStatusMessage("❌ Gagal. Cek koneksi Anda.");
     }
   }, []);
 
@@ -80,7 +84,7 @@ export default function Home() {
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-6 w-full max-w-md mx-auto">
         
         <div className="mb-6 relative">
-          <div className="absolute inset-0 bg-blue-500 rounded-full blur-[20px] opacity-40 animate-pulse"></div>
+          <div className="absolute inset-0 bg-blue-500 rounded-full blur-[20px] opacity-40"></div>
           <img 
             src={userPfp} 
             className="relative w-28 h-28 rounded-full border-2 border-white/10 shadow-2xl object-cover"
@@ -92,7 +96,7 @@ export default function Home() {
           <h1 className="text-4xl font-black text-white mb-2 tracking-tight uppercase italic">GM, {userName}</h1>
           <div className="inline-block px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full">
             <p className="text-blue-400 text-[10px] font-bold tracking-widest uppercase">
-              {address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Wallet Connecting..."}
+              {address ? `${address.slice(0,6)}...${address.slice(-4)}` : "Wallet Connected"}
             </p>
           </div>
         </div>
@@ -100,7 +104,7 @@ export default function Home() {
         <div className="w-full bg-[#111111]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-8 shadow-2xl mb-8">
             
             {statusMessage && (
-                <div className="mb-6 text-center text-xs font-bold py-3 bg-blue-500/10 text-blue-300 rounded-2xl border border-blue-500/20 animate-fade-in">
+                <div className={`mb-6 text-center text-xs font-bold py-3 rounded-2xl border ${statusMessage.includes('✅') ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-blue-500/10 text-blue-300 border-blue-500/20 animate-pulse'}`}>
                     {statusMessage}
                 </div>
             )}
@@ -112,13 +116,11 @@ export default function Home() {
                 onStatus={handleStatus}
                 capabilities={{ paymasterService: { url: PAYMASTER_URL } }}
               >
-                {/* PERBAIKAN WARNA: Background Biru, Teks Putih */}
                 <TransactionButton 
                   text="SEND GM BASE ⚡" 
-                  className="w-full !bg-blue-600 !text-white !opacity-100 font-black text-sm py-5 rounded-2xl hover:!bg-blue-500 transition-all active:scale-95 !visible shadow-lg shadow-blue-900/20" 
+                  className="w-full !bg-blue-600 !text-white font-black text-sm py-5 rounded-2xl hover:!bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20" 
                 />
-                
-                <div className="mt-4 opacity-50">
+                <div className="mt-4">
                   <TransactionStatus>
                     <TransactionStatusLabel className="text-[9px] uppercase tracking-[0.2em] text-center w-full block text-zinc-500" />
                   </TransactionStatus>
@@ -129,7 +131,7 @@ export default function Home() {
             {txHash && (
                 <button 
                     onClick={() => openLink(`https://basescan.org/tx/${txHash}`)}
-                    className="mt-6 w-full text-[10px] font-bold text-zinc-600 hover:text-blue-400 transition-colors tracking-tighter"
+                    className="mt-6 w-full text-[10px] font-bold text-zinc-500 hover:text-blue-400 transition-colors tracking-widest"
                 >
                     — VIEW ON BASESCAN —
                 </button>
@@ -139,13 +141,13 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-4 w-full">
             <button 
                 onClick={() => openLink("https://warpcast.com/~/developers/embed?url=https%3A%2F%2Fneynar-spam.vercel.app%2F")}
-                className="bg-zinc-900/40 border border-white/5 text-zinc-400 font-bold py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                className="bg-zinc-900/40 border border-white/5 text-zinc-400 font-bold py-4 rounded-2xl text-[10px] uppercase tracking-widest"
             >
                🛡️ Check Spam
             </button>
             <button 
                 onClick={() => openLink("https://dune.com/base/base-metrics")}
-                className="bg-zinc-900/40 border border-white/5 text-zinc-400 font-bold py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                className="bg-zinc-900/40 border border-white/5 text-zinc-400 font-bold py-4 rounded-2xl text-[10px] uppercase tracking-widest"
             >
                📊 Bassy Chart
             </button>
