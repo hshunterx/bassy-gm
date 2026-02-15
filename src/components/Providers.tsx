@@ -9,7 +9,12 @@ import { useState, type ReactNode } from 'react';
 
 const config = createConfig({
   chains: [base],
-  connectors: [coinbaseWallet({ appName: 'Bassy GM', preference: 'all' })],
+  connectors: [
+    coinbaseWallet({ 
+      appName: 'Bassy GM', 
+      preference: 'all' // Menggunakan settingan lama kamu
+    })
+  ],
   ssr: true,
   transports: { [base.id]: http() },
 });
@@ -21,7 +26,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <OnchainKitProvider 
-          apiKey="AC79604A-1C42-401D-AEEB-603CEE7C57B2" 
+          apiKey="AC79604A-1C42-401D-AEEB-603CEE7C57B2" // API KEY PENTING!
           chain={base}
         >
           {children}
